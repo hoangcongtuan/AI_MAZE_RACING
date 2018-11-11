@@ -33,6 +33,9 @@ public class MainAI {
 
     private int[] ix = {1, 0, 0, -1};
     private int[] iy = {0, 1, -1, 0};
+//
+//    int[] ix = {0, 1, -1, 0, 0};
+//    int[] iy = {1, 0, 0, -1, 0};
 
     //last position
     private double lastX = 0;
@@ -40,7 +43,7 @@ public class MainAI {
 
     // last speed
     private double speed = 0;
-    private final double SPEED_MAX = 0.0125;
+    private final double SPEED_MAX = 0.01;
 
     //dieu khien xe chay
     //neu timer1%TURN_VAL == 1 thi xe vua thang vua TURN_VAL, khong thi xe chi TURN_VAL (dua vao gia toc truoc do)
@@ -248,13 +251,13 @@ public class MainAI {
                     if (random_timer > RANDOM_TIMER_LIMIT)
                         random_timer = 0;
 
-                    if (random_timer % 3 == 0) {
-                        turn_back_left = false;
-                    } else if (random_timer % 3 == 1) {
-                        turn_back_left = true;
-                    } else {
+//                    if (random_timer % 3 == 0) {
+//                        turn_back_left = false;
+//                    } else if (random_timer % 3 == 1) {
+//                        turn_back_left = true;
+//                    } else {
                         turn_back = true;
-                    }
+//                    }
                 } else {
                     xt = this.Mycar.getx();
                     yt = this.Mycar.gety();
