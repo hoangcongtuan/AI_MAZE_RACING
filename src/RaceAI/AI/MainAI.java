@@ -95,11 +95,14 @@ public class MainAI {
     public int dung=0;
     double xt=0,yt=0;
 
+    Random random = new Random();
+
 
 
     //ham tim diem tiep theo
     public Point tiep(int x, int y)
     {
+        random_choice_block();
         Point sau=new Point();
         int nga=0;
         boolean tiep = false; 	//co loi di tiep khong
@@ -145,6 +148,20 @@ public class MainAI {
         }
 
         return sau;
+    }
+
+    private void random_choice_block() {
+        int temp;
+        int i1 = random.nextInt(4);
+        int i2 = random.nextInt(4);
+
+        temp = ix[i1];
+        ix[i1] = ix[i2];
+        ix[i2] = temp;
+
+        temp = iy[i1];
+        iy[i1] = iy[i2];
+        iy[i2] = temp;
     }
 
     public void AI(){
