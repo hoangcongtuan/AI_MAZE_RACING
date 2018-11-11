@@ -233,6 +233,7 @@ public class MainAI {
             int other_x = (int) (others.getx() / this.race.BlockSize());
             int other_y = (int) (others.gety() / this.race.BlockSize());
 
+            mapOther[i][other_x][other_y] = 1;
             //nếu có 1 xe địch về đích thì xóa tất cả các vị trí mà xe địch chưa đi qua
             if (other_x == this.race.BlockColumn() - 2 && other_y == this.race.BlockRow() - 2 && !isOtherFinish) {
                 mapOther[i][other_x][other_y] = 1;
