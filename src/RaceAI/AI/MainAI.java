@@ -31,8 +31,8 @@ public class MainAI {
      */
     private int[][][] mapOther;
 
-    private int[] ix = {1, 0, 0, -1};
-    private int[] iy = {0, 1, -1, 0};
+    private int[] ix = {0, 1, -1, 0};
+    private int[] iy = {1, 0, 0, -1};
 
     //last position
     private double lastX = 0;
