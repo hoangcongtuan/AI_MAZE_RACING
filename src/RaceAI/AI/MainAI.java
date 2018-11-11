@@ -1,6 +1,7 @@
 package RaceAI.AI;
 
 import java.awt.Point;
+import java.util.Random;
 import java.util.Vector;
 
 import RaceAI.RaceClient.Car;
@@ -67,6 +68,7 @@ public class MainAI {
     private double xt = 0, yt = 0;        //lưu vị trí xe để phát hiện crash
     private int CRASH_CHECK_INTERVAL = 300;    //sau mỗi CRASH_CHECK_INTERVAL thì kiểm tra crash
     private int RANDOM_TIMER_LIMIT = 1000;    //limit của timer
+    private Random random = new Random();
 
     public MainAI(Race race, Vector<Car> cars, Car Mycar) {
         this.race = race;
@@ -93,6 +95,20 @@ public class MainAI {
         }
     }
 
+    private void random_choice_block() {
+            int temp;
+            int i1 = random.nextInt(4);
+            int i2 = random.nextInt(4);
+
+            temp = ix[i1];
+            ix[i1] = ix[i2];
+            ix[i2] = temp;
+
+            temp = iy[i1];
+            iy[i1] = iy[i2];
+            iy[i2] = temp;
+    }
+
     /**
      * Tìm block tiếp theo
      *
@@ -101,6 +117,7 @@ public class MainAI {
      * @return Block tiếp theo
      */
     private Point findNextBlock(int currentBlockX, int currentBlockY) {
+        random_choice_block();
         Point nextBlock = new Point();
         int soNgaDuong = 0;    //số ngã đường
         boolean canGo = false;    //có đường đi tiếp hay không
