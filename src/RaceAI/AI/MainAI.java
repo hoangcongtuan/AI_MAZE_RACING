@@ -32,8 +32,8 @@ public class MainAI {
      */
     private int[][][] mapOther;
 
-    private int[] ix = {0, 1, -1, 0};
-    private int[] iy = {1, 0, 0, -1};
+    int[] ix = {0, 1, -1, 0, 0};
+    int[] iy = {1, 0, 0, -1, 0};
 
     //last position
     private double lastX = 0;
@@ -69,12 +69,14 @@ public class MainAI {
     private int CRASH_CHECK_INTERVAL = 300;    //sau mỗi CRASH_CHECK_INTERVAL thì kiểm tra crash
     private int RANDOM_TIMER_LIMIT = 1000;    //limit của timer
     private Random random = new Random();
+    private int warmUpTime = 0;
 
     public MainAI(Race race, Vector<Car> cars, Car Mycar) {
         this.race = race;
         this.Mycar = Mycar;
         this.All_cars = cars;
 
+        System.out.println("start! " + warmUpTime);
         initMyVariable();
     }
 
@@ -96,17 +98,17 @@ public class MainAI {
     }
 
     private void random_choice_block() {
-            int temp;
-            int i1 = random.nextInt(4);
-            int i2 = random.nextInt(4);
+        int temp;
+        int i1 = random.nextInt(4);
+        int i2 = random.nextInt(4);
 
-            temp = ix[i1];
-            ix[i1] = ix[i2];
-            ix[i2] = temp;
+        temp = ix[i1];
+        ix[i1] = ix[i2];
+        ix[i2] = temp;
 
-            temp = iy[i1];
-            iy[i1] = iy[i2];
-            iy[i2] = temp;
+        temp = iy[i1];
+        iy[i1] = iy[i2];
+        iy[i2] = temp;
     }
 
     /**
@@ -136,8 +138,8 @@ public class MainAI {
                 if ((map[currentBlockX + ix[i]][currentBlockY + iy[i]] == 0)
                         && (this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1'))
                     newWay = true;
-            }
-            catch (ArrayIndexOutOfBoundsException e) {
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.out.println("Continue");
                 continue;
             }
 
@@ -150,27 +152,45 @@ public class MainAI {
         //dò hết 4 block xung quanh
         for (int i = 0; i <= 3; i++) {
             if (canGo && newWay) {
-                if ((this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1')
-                        && (map[currentBlockX + ix[i]][currentBlockY + iy[i]] == 0)) {
-                    nextBlock = new Point(currentBlockX + ix[i], currentBlockY + iy[i]);
-                    map[currentBlockX][currentBlockY] = -1;
-                    break;
-                }
-            } else if (canGo) {
-                if ((this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1')
-                        && (map[currentBlockX + ix[i]][currentBlockY + iy[i]] > 0)) {
-                    nextBlock = new Point(currentBlockX + ix[i], currentBlockY + iy[i]);
-
-                    if (map[currentBlockX][currentBlockY] == 0)
+                try {
+                    if ((this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1')
+                            && (map[currentBlockX + ix[i]][currentBlockY + iy[i]] == 0)) {
+                        nextBlock = new Point(currentBlockX + ix[i], currentBlockY + iy[i]);
                         map[currentBlockX][currentBlockY] = -1;
-                    break;
+                        break;
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("continue");
+                    continue;
                 }
+
+            } else if (canGo) {
+                try {
+                    if ((this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1')
+                            && (map[currentBlockX + ix[i]][currentBlockY + iy[i]] > 0)) {
+                        nextBlock = new Point(currentBlockX + ix[i], currentBlockY + iy[i]);
+
+                        if (map[currentBlockX][currentBlockY] == 0)
+                            map[currentBlockX][currentBlockY] = -1;
+                        break;
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("continue");
+                    continue;
+                }
+
             } else {
-                if (map[currentBlockX + ix[i]][currentBlockY + iy[i]] == -1) {
-                    nextBlock = new Point(currentBlockX + ix[i], currentBlockY + iy[i]);
-                    map[currentBlockX][currentBlockY] = -2;
-                    break;
+                try {
+                    if (map[currentBlockX + ix[i]][currentBlockY + iy[i]] == -1) {
+                        nextBlock = new Point(currentBlockX + ix[i], currentBlockY + iy[i]);
+                        map[currentBlockX][currentBlockY] = -2;
+                        break;
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("continue");
+                    continue;
                 }
+
             }
         }
 
@@ -178,11 +198,42 @@ public class MainAI {
     }
 
     public void AI() {
+
         int currentBlockX = (int) (this.Mycar.getx() / this.race.BlockSize());
         int currentBlockY = (int) (this.Mycar.gety() / this.race.BlockSize());
         if (currentBlockX == this.race.BlockColumn() - 2 && currentBlockY == this.race.BlockRow() - 2) {
             //goal!, go straight ahead
             this.key = "1000";
+            return;
+        }
+
+        //trace other coordinate
+        int n = All_cars.size();
+        for (int i = 0; i < n; i++) {
+            //vi tri cua xe dich
+            Car others = All_cars.get(i);
+            if (others == this.Mycar)
+                continue;
+            int other_x = (int) (others.getx() / this.race.BlockSize());
+            int other_y = (int) (others.gety() / this.race.BlockSize());
+
+            if (!isOtherFinish)
+                mapOther[i][other_x][other_y] = 1;
+            //nếu có 1 xe địch về đích thì xóa tất cả các vị trí mà xe địch chưa đi qua
+            if (other_x == this.race.BlockColumn() - 2 && other_y == this.race.BlockRow() - 2 && !isOtherFinish) {
+                mapOther[i][other_x][other_y] = 1;
+                for (int j = 1; j <= this.race.BlockColumn(); j++)
+                    for (int k = 1; k <= this.race.BlockRow(); k++) {
+                        if (mapOther[i][j][k] == 0 && map[j][k] == 0)
+                            map[j][k] = -2;
+                    }
+                isOtherFinish = true;
+            }
+        }
+
+        //warmup Time
+        if (--warmUpTime > 0) {
+            System.out.println("warm up " + warmUpTime);
             return;
         }
 
@@ -226,135 +277,115 @@ public class MainAI {
             return;
         }
 
-        int n = All_cars.size();
-        for (int i = 0; i < n; i++) {
-            //vi tri cua xe dich
-            Car others = All_cars.get(i);
-            int other_x = (int) (others.getx() / this.race.BlockSize());
-            int other_y = (int) (others.gety() / this.race.BlockSize());
+        //chạy tới nextblock
+        //block_center
+        double next_bl_center_x = (this.nextBlock.x + 0.5) * this.race.BlockSize();// + ixx[huong]*xeta;
+        double next_bl_center_y = (this.nextBlock.y + 0.5) * this.race.BlockSize();// + iyy[huong]*xeta;
 
-            mapOther[i][other_x][other_y] = 1;
-            //nếu có 1 xe địch về đích thì xóa tất cả các vị trí mà xe địch chưa đi qua
-            if (other_x == this.race.BlockColumn() - 2 && other_y == this.race.BlockRow() - 2 && !isOtherFinish) {
-                mapOther[i][other_x][other_y] = 1;
-                for (int j = 1; j <= this.race.BlockColumn(); j++)
-                    for (int k = 1; k <= this.race.BlockRow(); k++) {
-                        if (mapOther[i][j][k] == 0 && map[j][k] == 0)
-                            map[j][k] = -2;
-                    }
-                isOtherFinish = true;
-            }
+        //Vector to Next Block Center from Car's position
+        double c_x = next_bl_center_x - this.Mycar.getx();
+        double c_y = next_bl_center_y - this.Mycar.gety();
+        double distance2center = Math.sqrt(c_x * c_x + c_y * c_y);
+        if (distance2center != 0) {
+            //vector normalization
+            c_x /= distance2center;
+            c_y /= distance2center;
+        }
 
-            //chạy tới nextblock
-            //block_center
-            double next_bl_center_x = (this.nextBlock.x + 0.5) * this.race.BlockSize();// + ixx[huong]*xeta;
-            double next_bl_center_y = (this.nextBlock.y + 0.5) * this.race.BlockSize();// + iyy[huong]*xeta;
+        /**
+         * sau mỗi CRASH_CHECK_INTERVAL thì kiểm tra crash
+         */
+        if (crash_timer % CRASH_CHECK_INTERVAL == 0) {
+            if (xt == this.Mycar.getx() && yt == this.Mycar.gety() && (currentBlockX != 1 || currentBlockY != 1)) {
 
-            //Vector to Next Block Center from Car's position
-            double c_x = next_bl_center_x - this.Mycar.getx();
-            double c_y = next_bl_center_y - this.Mycar.gety();
-            double distance2center = Math.sqrt(c_x * c_x + c_y * c_y);
-            if (distance2center != 0) {
-                //vector normalization
-                c_x /= distance2center;
-                c_y /= distance2center;
-            }
+                turn_back_count = 150;
+                crash_timer = 1;
+                turn_back_left = false;
+                turn_back = false;
+                random_timer++;
+                if (random_timer > RANDOM_TIMER_LIMIT)
+                    random_timer = 0;
 
-            /**
-             * sau mỗi CRASH_CHECK_INTERVAL thì kiểm tra crash
-             */
-            if (crash_timer % CRASH_CHECK_INTERVAL == 0) {
-                if (xt == this.Mycar.getx() && yt == this.Mycar.gety() && (currentBlockX != 1 || currentBlockY != 1)) {
-
-                    turn_back_count = 150;
-                    crash_timer = 1;
+                if (random_timer % 3 == 0) {
                     turn_back_left = false;
-                    turn_back = false;
-                    random_timer++;
-                    if (random_timer > RANDOM_TIMER_LIMIT)
-                        random_timer = 0;
-
-                    if (random_timer % 3 == 0) {
-                        turn_back_left = false;
-                    } else if (random_timer % 3 == 1) {
-                        turn_back_left = true;
-                    } else {
-                        turn_back = true;
-                    }
+                } else if (random_timer % 3 == 1) {
+                    turn_back_left = true;
                 } else {
-                    xt = this.Mycar.getx();
-                    yt = this.Mycar.gety();
+                    turn_back = true;
                 }
-            }
-            crash_timer++;
-
-            if (currentBlockX == 1 && currentBlockY == 1)
-                timer2 = 0;
-            if (distance2center < this.race.BlockSize() * 0.5) {
-                this.nextBlock = findNextBlock(currentBlockX, currentBlockY);
-                timer2 = 0;
             } else {
-                // Go to nextBlock block center
-                double inner = v_x * c_x + v_y * c_y;
-                double outer = v_x * c_y - v_y * c_x;
+                xt = this.Mycar.getx();
+                yt = this.Mycar.gety();
+            }
+        }
+        crash_timer++;
 
-                if (inner > 0.995) {
-                    this.key = "1000"; //go
-                } else //inner < 0.995{
-                    if (inner < 0) {
+        if (currentBlockX == 1 && currentBlockY == 1)
+            timer2 = 0;
+        if (distance2center < this.race.BlockSize() * 0.5) {
+            this.nextBlock = findNextBlock(currentBlockX, currentBlockY);
+            timer2 = 0;
+        } else {
+            // Go to nextBlock block center
+            double inner = v_x * c_x + v_y * c_y;
+            double outer = v_x * c_y - v_y * c_x;
+
+            if (inner > 0.995) {
+                this.key = "1000"; //go
+            } else //inner < 0.995{
+                if (inner < 0) {
 //					System.out.println("Back");
-                        if (timer1 % 2 == 0) {
-                            this.key = "0001"; //turn right
+                    if (timer1 % 2 == 0) {
+                        this.key = "0001"; //turn right
 //						System.out.println("back right");
-                        } else {
-                            this.key = "0010";        //turn left
+                    } else {
+                        this.key = "0010";        //turn left
 //						System.out.println("back left");
+                    }
+                } else //iner >= 0
+                {
+                    if (this.race.BlockKind(currentBlockX, currentBlockY) != '3') {
+                        if (outer > 0)    //0001 turn right
+                        {
+                            if (timer2++ > TURN_THRESHOLD) {
+//								System.out.println(timer1);
+                                if ((timer1++ % TURN_VAL) == 0)
+                                    this.key = "0001";
+                                else
+                                    this.key = "1001";
+                            } else
+                                this.key = "0001";
+                        } else        //"0010" turn left
+                        {
+                            if (timer2++ > TURN_THRESHOLD) {
+//								System.out.println(timer1);
+                                if ((timer1++ % TURN_VAL) == 0)
+                                    this.key = "0010";
+                                else
+                                    this.key = "1010";
+                            } else
+                                this.key = "0010";
                         }
-                    } else //iner >= 0
-                    {
-                        if (this.race.BlockKind(currentBlockX, currentBlockY) != '3') {
-                            if (outer > 0)    //0001 turn right
-                            {
-                                if (timer2++ > TURN_THRESHOLD) {
-//								System.out.println(timer1);
-                                    if ((timer1++ % TURN_VAL) == 0)
-                                        this.key = "0001";
-                                    else
-                                        this.key = "1001";
-                                } else
-                                    this.key = "0001";
-                            } else        //"0010" turn left
-                            {
-                                if (timer2++ > TURN_THRESHOLD) {
-//								System.out.println(timer1);
-                                    if ((timer1++ % TURN_VAL) == 0)
-                                        this.key = "0010";
-                                    else
-                                        this.key = "1010";
-                                } else
+                    } else {
+                        if (outer > 0)//	  "0010" turn right
+                        {
+                            if (timer2++ > TURN_THRESHOLD) {
+                                if ((timer1++ % TURN_VAL) == 0)
                                     this.key = "0010";
-                            }
-                        } else {
-                            if (outer > 0)//	  "0010" turn right
-                            {
-                                if (timer2++ > TURN_THRESHOLD) {
-                                    if ((timer1++ % TURN_VAL) == 0)
-                                        this.key = "0010";
-                                    else this.key = "1010";
-                                } else
-                                    this.key = "0010";
-                            } else        //"0001" turn left
-                            {
-                                if (timer2++ > TURN_THRESHOLD) {
-                                    if ((timer1++ % TURN_VAL) == 0)
-                                        this.key = "0001";
-                                    else this.key = "1001";
-                                } else
+                                else this.key = "1010";
+                            } else
+                                this.key = "0010";
+                        } else        //"0001" turn left
+                        {
+                            if (timer2++ > TURN_THRESHOLD) {
+                                if ((timer1++ % TURN_VAL) == 0)
                                     this.key = "0001";
-                            }
+                                else this.key = "1001";
+                            } else
+                                this.key = "0001";
                         }
                     }
-            }
+                }
         }
     }
 }
