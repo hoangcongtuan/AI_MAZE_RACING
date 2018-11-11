@@ -124,15 +124,23 @@ public class MainAI {
         boolean newWay = false;    //có đường chưa đi qua hay không
 
         for (int i = 0; i <= 3; i++) {
-            if (this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1')
+            char blockKind = this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]);
+            if (blockKind != '1' && blockKind != '?')
                 soNgaDuong++;
 
-            if ((map[currentBlockX + ix[i]][currentBlockY + iy[i]] >= 0)
-                    && (this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1'))
-                canGo = true;
-            if ((map[currentBlockX + ix[i]][currentBlockY + iy[i]] == 0)
-                    && (this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1'))
-                newWay = true;
+            //avoid array indexof bound exception
+            try {
+                if ((map[currentBlockX + ix[i]][currentBlockY + iy[i]] >= 0)
+                        && (this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1'))
+                    canGo = true;
+                if ((map[currentBlockX + ix[i]][currentBlockY + iy[i]] == 0)
+                        && (this.race.BlockKind(currentBlockX + ix[i], currentBlockY + iy[i]) != '1'))
+                    newWay = true;
+            }
+            catch (ArrayIndexOutOfBoundsException e) {
+                continue;
+            }
+
         }
 
         //là ngã 3, ngã tư
