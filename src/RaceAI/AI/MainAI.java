@@ -32,8 +32,11 @@ public class MainAI {
      */
     private int[][][] mapOther;
 
-    int[] ix = {0, 1, -1, 0, 0};
-    int[] iy = {1, 0, 0, -1, 0};
+//    int[] ix = {0, 1, -1, 0};
+//    int[] iy = {1, 0, 0, -1};
+
+    int[] ix = {1, 0, -1, 0};
+    int[] iy = {0, 1, 0, -1};
 
     //last position
     private double lastX = 0;
@@ -97,7 +100,9 @@ public class MainAI {
         }
     }
 
-    private void random_choice_block() {
+    private void random_choice_block(boolean isFirstTime) {
+        if (isFirstTime)
+            return;
         int temp;
         int i1 = random.nextInt(4);
         int i2 = random.nextInt(4);
@@ -118,8 +123,8 @@ public class MainAI {
      * @param currentBlockY Block hiện tại Y
      * @return Block tiếp theo
      */
-    private Point findNextBlock(int currentBlockX, int currentBlockY) {
-        random_choice_block();
+    private Point findNextBlock(int currentBlockX, int currentBlockY, boolean isFirstTime) {
+        random_choice_block(isFirstTime);
         Point nextBlock = new Point();
         int soNgaDuong = 0;    //số ngã đường
         boolean canGo = false;    //có đường đi tiếp hay không
@@ -238,7 +243,7 @@ public class MainAI {
         }
 
         if (this.nextBlock == null)
-            this.nextBlock = findNextBlock(currentBlockX, currentBlockY);
+            this.nextBlock = findNextBlock(currentBlockX, currentBlockY, true);
 
         if (timer1 > 1000)
             timer1 = 0;
@@ -323,7 +328,7 @@ public class MainAI {
         if (currentBlockX == 1 && currentBlockY == 1)
             timer2 = 0;
         if (distance2center < this.race.BlockSize() * 0.5) {
-            this.nextBlock = findNextBlock(currentBlockX, currentBlockY);
+            this.nextBlock = findNextBlock(currentBlockX, currentBlockY, false);
             timer2 = 0;
         } else {
             // Go to nextBlock block center
